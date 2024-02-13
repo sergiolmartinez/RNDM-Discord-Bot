@@ -1,8 +1,9 @@
 # Repository Details
 
-This repository is for the RNDM Discord bot that is capable of various things. Functionality will be added throughout its life and listed below. The repository can be broken into three parts: 
-    - The bot written in python in the `bot` directory 
-    - The backend, yet to be written in the `backend` directory 
+This repository is for the RNDM Discord bot that is capable of various things. Functionality will be added throughout its life and listed below. The repository can be broken into three parts:
+
+    - The bot written in python in the `bot` directory
+    - The backend, yet to be written in the `backend` directory
     - The frontend for the web based admin dashboard, yet to be written in the `frontend` directory
 
 Note that this bot uses postgresql that can be installed on your computer for development purposes https://www.postgresql.org/download/
