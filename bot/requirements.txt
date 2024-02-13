@@ -1,0 +1,6 @@
+discord.py[voice]
+asyncpg
+tortoise-orm
+python-dotenv
+logging
+pathlib
