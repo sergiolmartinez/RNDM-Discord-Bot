@@ -25,8 +25,10 @@ async def get_prefix(bot: commands.bot, message: discord.Message):
 
 
 def run():
-    intents = discord.Intents.all()
+    intents = discord.Intents.default()
     intents.message_content = True
+    intents.voice_states = True
+    intents.members = True
 
     bot = commands.Bot(command_prefix=get_prefix, intents=intents)
 

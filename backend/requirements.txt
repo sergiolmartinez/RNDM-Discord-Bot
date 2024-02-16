@@ -1,0 +1,7 @@
+flask
+Flask[async]
+flask_cors
+python-dotenv
+requests_oauthlib
+axios
+aiohttp
