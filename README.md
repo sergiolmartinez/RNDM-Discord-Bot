@@ -1,5 +1,7 @@
 # Repository Details
 
+This repo will be broken out into multiple repos in the future for separately handling the continuous development of the backend, frontend and bot separately.
+
 This repository is for the RNDM Discord bot that is capable of various things. Functionality will be added throughout its life and listed below. The repository can be broken into three parts:
 
     - The bot written in python in the `bot` directory
@@ -59,7 +61,7 @@ for the backend
 
 for the frontend
 
-1. cd to the frontend directory
+1. cd to the frontend directory `cd client`
 2. Create a `config.json` file and include your API URI and the OAUTH URI from the Discord developer portal.
 3. Run `npm install`
 4. To run the frontend simple run `yarn start`
