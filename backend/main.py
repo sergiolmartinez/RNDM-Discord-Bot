@@ -1,8 +1,9 @@
 import os
-from flask import Flask, request, jsonify, abort
-from flask_cors import CORS
+from flask import Flask, request, jsonify, abort, make_response
+from flask_cors import CORS, cross_origin
 import aiohttp
 from dotenv import load_dotenv
+from json import loads
 
 load_dotenv()
 
@@ -27,6 +28,24 @@ async def fetch_token(code):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         ) as resp:
             return await resp.json()
+
+
+async def fetch_and_filter_guilds(token):
+    url = "https://discord.com/api/v9/users/@me/guilds"
+    headers = {"Authorization": f"Bearer {token}"}
+    manage_guild_permission_bit = 0x20  # Manage Guild permission
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                guilds = await response.json()
+                owned_or_managed_guilds = [
+                    guild for guild in guilds if int(guild["permissions"]) & manage_guild_permission_bit
+                ]
+                return owned_or_managed_guilds
+            else:
+                # Handle error appropriately
+                return []
 
 
 @app.route('/oauth/callback', methods=['POST'])
@@ -75,40 +94,34 @@ async def get_own_user():
     })
 
 
-@app.route('/guilds', methods=['GET'])
+@app.route('/guilds')
+# @cross_origin()
 async def mutual_guilds():
-    # Extract the Authorization header and the token
     auth_header = request.headers.get('Authorization')
-    if auth_header and auth_header.startswith('Bearer '):
-        token = auth_header[7:]  # Skip 'Bearer ' to get the token
-    else:
-        abort(
-            401, description="Unauthorized: No access token provided or token is malformed")
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return make_response(jsonify({"error": "Unauthorized", "description": "No access token provided or token is malformed", "status": 401}), 401)
+
+    # Extract the token from the Authorization header
+    token = auth_header.split(' ')[1]
+    filtered_guilds = await fetch_and_filter_guilds(token)
+    guild_ids = [guild['id'] for guild in filtered_guilds]
+    # print(guild_ids)
+
+    headers = {'Authorization': f'Bearer {token}',
+               'Content-Type': 'application/json'}
 
     async with aiohttp.ClientSession() as session:
-        headers = {'Authorization': f'Bearer {token}'}
-        async with session.get('https://discord.com/api/users/@me/guilds', headers=headers) as resp:
+        headers = {'Authorization': f'Bearer {token}',
+                   'Content-Type': 'application/json'}
+        async with session.post('http://localhost:6969/guilds', headers=headers, json={"guilds": guild_ids}) as resp:
             if resp.status != 200:
-                # If Discord's API returns an error, provide a more detailed error message if possible
-                error_message = f"Failed to fetch guilds: {resp.reason}"
-                try:
-                    # Attempt to parse the error message from Discord's response
-                    error_data = await resp.json()
-                    if "message" in error_data:
-                        error_message += f" - {error_data['message']}"
-                except Exception:
-                    pass  # If parsing fails, ignore and use the generic error message
-                abort(resp.status, description=error_message)
+                resp_text = await resp.text()
+                return make_response(jsonify({"error": "Error fetching mutual guilds", "description": resp_text, "status": resp.status}), resp.status)
 
-            guilds = await resp.json()
+            mutual_guilds = await resp.json()
+            print(mutual_guilds)
 
-    # Example filtering logic: Keep guilds where the bot is a member
-    # This is placeholder logic. You'll need to adjust this based on your application's requirements
-    # and the data structure of the guilds.
-    mutual_guilds = [
-        guild for guild in guilds if "bot_is_member" in guild and guild["bot_is_member"]]
-
-    return jsonify(mutual_guilds)
+        return mutual_guilds
 
 
 if __name__ == '__main__':
